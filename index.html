@@ -18,7 +18,7 @@
   --border: #d4d2cb;
   --text: #1a1a18;
   --muted: #888780;
-  --green: #0F6E56;
+  --green: #0078D4;
   --amber: #854F0B;
   --red: #A32D2D;
   --blue: #185FA5;
@@ -94,7 +94,7 @@ html, body { height: 100%; background: var(--bg); font-family: -apple-system, Bl
 }
 .result-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 .gp-big { font-size: 42px; font-weight: 300; line-height: 1; color: var(--text); }
-.gp-big.good { color: var(--green); }
+.gp-big.good { color: #0078D4; }
 .gp-big.mid  { color: var(--amber); }
 .gp-big.bad  { color: var(--red); }
 .gp-chosen { font-size: 42px; font-weight: 300; line-height: 1; color: var(--green); margin-bottom: 10px; }
@@ -107,7 +107,7 @@ html, body { height: 100%; background: var(--bg); font-family: -apple-system, Bl
   color: var(--muted); font-size: 12px; font-weight: 500;
   font-family: inherit; cursor: pointer; transition: all .1s;
 }
-.gp-pill.active { border-color: var(--green); color: var(--green); background: rgba(15,110,86,0.06); font-weight: 700; }
+.gp-pill.active { border-color: var(--green); color: var(--green); background: rgba(0,120,212,0.07); font-weight: 700; }
 .pill-custom {
   height: 28px; border-radius: 20px; border: 1.5px solid var(--border);
   background: transparent; display: inline-flex; align-items: center;
@@ -162,7 +162,7 @@ html, body { height: 100%; background: var(--bg); font-family: -apple-system, Bl
 .bd-row:last-child { border-bottom: none; }
 .bd-label { font-size: 10px; color: var(--muted); }
 .bd-val { font-size: 11px; font-weight: 700; color: var(--text); }
-.bd-val.profit { color: var(--green); }
+.bd-val.profit { color: #107C10; }
 .bd-val.price  { color: var(--blue); }
 
 /* ── Buttons ── */
@@ -586,10 +586,10 @@ async function saveSnapshot(tab){
   const rateText = '1 USD = '+others.map(c=>SYM[c]+rates[c].toFixed(4)).join('  ·  ');
   const gpVal = tab==='calc' ? document.getElementById('gp-display').textContent : document.getElementById('gp-chosen').textContent;
   const gpCls = tab==='calc' ? document.getElementById('gp-display').className : 'gp-big good';
-  const gpColor = gpCls.includes('good')?'#0F6E56':gpCls.includes('mid')?'#854F0B':gpCls.includes('bad')?'#A32D2D':'#0F6E56';
+  const gpColor = gpCls.includes('good')?'#0078D4':gpCls.includes('mid')?'#854F0B':gpCls.includes('bad')?'#A32D2D':'#0078D4';
 
   wrap.innerHTML = `
-    <div style="background:#0F6E56;color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+    <div style="background:#0078D4;color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
       <div>
         <div style="font-size:13px;font-weight:700;">GP Calculator</div>
         <div style="font-size:10px;opacity:.8;">${tab==='calc'?'Calculate GP%':'Calculate Price/Cost'}</div>
@@ -613,14 +613,14 @@ async function saveSnapshot(tab){
         const fieldsHtml = fields.map(([lbl,v])=>`
           <div style="margin-bottom:6px;">
             <div style="font-size:9px;color:#888780;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">${lbl}</div>
-            <div style="padding:5px 8px;font-size:13px;border-radius:7px;border:1px solid ${isPinned?'#0F6E56':'#d4d2cb'};background:#fff;color:${v==null?'#c8c6be':'#1a1a18'};">${v!=null?Math.round(v).toLocaleString('en'):'—'}</div>
+            <div style="padding:5px 8px;font-size:13px;border-radius:7px;border:1px solid ${isPinned?'#0078D4':'#d4d2cb'};background:#fff;color:${v==null?'#c8c6be':'#1a1a18'};">${v!=null?Math.round(v).toLocaleString('en'):'—'}</div>
           </div>`).join('');
         const bdStyled = bdHtml.replace(/class="bd-row"/g,'style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #d4d2cb;font-size:11px;"')
           .replace(/class="bd-label"/g,'style="color:#888780;"')
           .replace(/class="bd-val price"/g,'style="font-weight:600;color:#185FA5;"')
-          .replace(/class="bd-val profit"/g,'style="font-weight:600;color:#0F6E56;"')
+          .replace(/class="bd-val profit"/g,'style="font-weight:600;color:#0078D4;"')
           .replace(/class="bd-val"/g,'style="font-weight:600;color:#1a1a18;"');
-        return `<div style="background:#eceae3;border:1px solid ${isPinned?'#0F6E56':'#d4d2cb'};border-radius:11px;overflow:hidden;">
+        return `<div style="background:#eceae3;border:1px solid ${isPinned?'#0078D4':'#d4d2cb'};border-radius:11px;overflow:hidden;">
           <div style="padding:5px 9px;border-bottom:1px solid #d4d2cb;display:flex;justify-content:space-between;align-items:center;">
             <div style="font-size:12px;font-weight:700;color:#1a1a18;">${CUR_SHORT[c]}</div>
             <div style="font-size:10px;color:#888780;">${badge}</div>
