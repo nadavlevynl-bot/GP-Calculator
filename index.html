@@ -6,8 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GP Calc">
-<meta name="theme-color" content="#0F6E56">
+<meta name="theme-color" content="#0078D4">
 <link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <title>GP Calculator</title>
 <style>
 :root {
@@ -56,7 +58,7 @@ html, body { height: 100%; background: var(--bg); font-family: -apple-system, Bl
 .tab.active { color: var(--green); border-bottom-color: var(--green); }
 
 /* ── Scroll area ── */
-.scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; }
+.scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px 12px; }
 
 /* ── Rate bar (modal sheet) ── */
 .sheet-overlay {
@@ -88,103 +90,85 @@ html, body { height: 100%; background: var(--bg); font-family: -apple-system, Bl
 /* ── GP result ── */
 .result-card {
   background: var(--card); border: 1px solid var(--border);
-  border-radius: 14px; padding: 20px 16px; text-align: center; margin-bottom: 14px;
+  border-radius: 12px; padding: 12px 16px; text-align: center; margin-bottom: 8px;
 }
 .result-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-.gp-big { font-size: 56px; font-weight: 300; line-height: 1; color: var(--text); }
+.gp-big { font-size: 42px; font-weight: 300; line-height: 1; color: var(--text); }
 .gp-big.good { color: var(--green); }
 .gp-big.mid  { color: var(--amber); }
 .gp-big.bad  { color: var(--red); }
-.gp-chosen { font-size: 56px; font-weight: 300; line-height: 1; color: var(--green); margin-bottom: 14px; }
+.gp-chosen { font-size: 42px; font-weight: 300; line-height: 1; color: var(--green); margin-bottom: 10px; }
 
 /* ── GP pills ── */
 .gp-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
 .gp-pill {
-  height: 34px; padding: 0 14px; border-radius: 20px;
+  height: 28px; padding: 0 10px; border-radius: 20px;
   border: 1.5px solid var(--border); background: transparent;
-  color: var(--muted); font-size: 13px; font-weight: 500;
+  color: var(--muted); font-size: 12px; font-weight: 500;
   font-family: inherit; cursor: pointer; transition: all .1s;
 }
 .gp-pill.active { border-color: var(--green); color: var(--green); background: rgba(15,110,86,0.06); font-weight: 700; }
 .pill-custom {
-  height: 34px; border-radius: 20px; border: 1.5px solid var(--border);
+  height: 28px; border-radius: 20px; border: 1.5px solid var(--border);
   background: transparent; display: inline-flex; align-items: center;
-  padding: 0 10px; gap: 2px; cursor: text;
+  padding: 0 8px; gap: 2px; cursor: text;
 }
 .pill-custom input {
-  width: 38px; border: none; outline: none; background: transparent;
-  font-size: 13px; font-weight: 500; font-family: inherit; color: var(--muted);
+  width: 22px; border: none; outline: none; background: transparent;
+  font-size: 12px; font-weight: 500; font-family: inherit; color: var(--muted);
   text-align: right; -moz-appearance: textfield;
 }
 .pill-custom input::-webkit-inner-spin-button,
 .pill-custom input::-webkit-outer-spin-button { -webkit-appearance: none; }
-.pill-custom .pct { font-size: 13px; font-weight: 500; color: var(--muted); }
+.pill-custom .pct { font-size: 12px; font-weight: 500; color: var(--muted); }
 .pill-custom.active { border-color: var(--green); }
 .pill-custom.active input, .pill-custom.active .pct { color: var(--green); }
 
+/* ── 2x2 grid ── */
+#cols-area { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+
 /* ── Currency cards ── */
-.cur-card {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 14px; margin-bottom: 10px; overflow: hidden;
-}
-.cur-head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 14px; border-bottom: 1px solid var(--border);
-}
-.cur-name { font-size: 15px; font-weight: 600; color: var(--text); }
-.cur-rate { font-size: 11px; color: var(--muted); }
-.pin-btn {
-  font-size: 16px; border: none; background: transparent; cursor: pointer;
-  opacity: 0.25; transition: opacity .15s; padding: 2px 4px;
-}
+.cur-card { background: var(--card); border: 1px solid var(--border); border-radius: 11px; overflow: hidden; }
+.cur-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 9px; border-bottom: 1px solid var(--border); }
+.cur-name { font-size: 12px; font-weight: 700; color: var(--text); }
+.cur-rate { font-size: 9px; color: var(--muted); }
+.pin-btn { font-size: 13px; border: none; background: transparent; cursor: pointer; opacity: 0.25; transition: opacity .15s; padding: 1px 2px; }
 .pin-btn.locked { opacity: 1; }
-.cur-body { padding: 12px 14px; }
-.field { margin-bottom: 10px; }
-.field label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+.cur-body { padding: 7px 9px; }
+.field { margin-bottom: 6px; }
+.field label { font-size: 9px; color: var(--muted); display: block; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
 
 /* Formatted input */
-.fmt-wrap { position: relative; width: 100%; height: 44px; }
+.fmt-wrap { position: relative; width: 100%; height: 32px; }
 .fmt-display {
-  position: absolute; inset: 0;
-  padding: 10px 12px; font-size: 17px; border-radius: 10px;
+  position: absolute; inset: 0; padding: 6px 8px; font-size: 13px; border-radius: 7px;
   border: 1px solid var(--border); background: #fff; color: var(--text);
-  font-family: inherit; cursor: text; line-height: 22px;
+  font-family: inherit; cursor: text; line-height: 18px;
   white-space: nowrap; overflow: hidden; z-index: 1;
 }
 .fmt-display.pinned { border-color: var(--green); }
 .fmt-display.placeholder { color: #c8c6be; }
 .fmt-real {
-  position: absolute; inset: 0; z-index: 2;
-  width: 100%; height: 100%; padding: 10px 12px;
-  font-size: 17px; font-family: inherit; border-radius: 10px;
+  position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%;
+  padding: 6px 8px; font-size: 13px; font-family: inherit; border-radius: 7px;
   border: 1px solid var(--border); background: #fff; color: var(--text); opacity: 0;
 }
 .fmt-real:focus { opacity: 1; outline: 2px solid var(--green); outline-offset: -1px; border-color: var(--green); }
 .fmt-real.pinned { border-color: var(--green); }
 
 /* ── Breakdown rows ── */
-.breakdown { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 6px; }
-.bd-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.breakdown { border-top: 1px solid var(--border); padding-top: 5px; margin-top: 4px; }
+.bd-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid var(--border); }
 .bd-row:last-child { border-bottom: none; }
-.bd-label { font-size: 13px; color: var(--muted); }
-.bd-val { font-size: 14px; font-weight: 600; color: var(--text); }
+.bd-label { font-size: 10px; color: var(--muted); }
+.bd-val { font-size: 11px; font-weight: 700; color: var(--text); }
 .bd-val.profit { color: var(--green); }
 .bd-val.price  { color: var(--blue); }
 
 /* ── Buttons ── */
-.btn-clear {
-  width: 100%; margin-top: 12px; padding: 12px;
-  font-size: 14px; font-weight: 500; border-radius: 10px;
-  border: 1px solid var(--border); background: transparent;
-  color: var(--muted); font-family: inherit; cursor: pointer;
-}
+.btn-clear { width: 100%; margin-top: 7px; padding: 8px; font-size: 12px; font-weight: 500; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: inherit; cursor: pointer; }
 .btn-clear:active { background: var(--border); }
-.btn-save {
-  width: 100%; margin-top: 8px; padding: 12px;
-  font-size: 14px; font-weight: 500; border-radius: 10px;
-  border: 1px solid var(--border); background: transparent;
-  color: var(--blue); font-family: inherit; cursor: pointer;
-}
+.btn-save { width: 100%; margin-top: 6px; padding: 10px; font-size: 13px; font-weight: 500; border-radius: 9px; border: 1px solid var(--border); background: transparent; color: var(--blue); font-family: inherit; cursor: pointer; }
 .btn-save:active { background: rgba(24,95,165,0.08); }
 
 /* ── Bottom safe area ── */
@@ -203,7 +187,7 @@ html, body { height: 100%; background: var(--bg); font-family: -apple-system, Bl
   <!-- Tabs -->
   <div class="tabs">
     <button class="tab active" id="tab-calc">Calculate GP%</button>
-    <button class="tab" id="tab-price">Find Selling Price</button>
+    <button class="tab" id="tab-price">Calculate Price/Cost</button>
   </div>
 
   <!-- Scrollable content -->
@@ -238,10 +222,10 @@ html, body { height: 100%; background: var(--bg); font-family: -apple-system, Bl
 
     <!-- Save button -->
     <div id="save-calc" class="panel active">
-      <button class="btn-save" id="save-btn-calc">💾 Save copy of this calculation</button>
+      <button class="btn-save" id="save-btn-calc">📸 Save as image</button>
     </div>
     <div id="save-price" class="panel">
-      <button class="btn-save" id="save-btn-price">💾 Save copy of this calculation</button>
+      <button class="btn-save" id="save-btn-price">📸 Save as image</button>
     </div>
 
     <div class="bottom-pad"></div>
@@ -279,7 +263,7 @@ const DAYS       = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday',
 const PRESETS    = [50,55,60,65,70,75];
 
 let rates = {USD:1, ILS:3.74, SGD:1.34, EUR:0.92};
-let master='USD', activeTab='calc', busy=false, currentGP=60;
+let master='USD', activeTab='calc', busy=false, currentGP=60, priceInputLast=false;
 const rawVal = {};
 
 // ── Load saved rates from localStorage ───────────────────────────────────────
@@ -322,6 +306,7 @@ function buildCols() {
           <button class="btn-clear reset-calc-btn">Clear</button>
         </div>
         <div id="${c}-price" class="panel">
+          <div class="field"><label>Selling Price</label><div class="fmt-wrap" id="wrap-${c}-price2"></div></div>
           <div class="field"><label>Cost</label><div class="fmt-wrap" id="wrap-${c}-cost2"></div></div>
           <div class="breakdown" id="${c}-price-bd" style="display:none"></div>
           <button class="btn-clear reset-price-btn">Clear</button>
@@ -331,6 +316,7 @@ function buildCols() {
 
   CURRENCIES.forEach(c => {
     ['rev','cost'].forEach(f => makeInput(`wrap-${c}-${f}`, `${c}-${f}`, 'calc'));
+    makeInput(`wrap-${c}-price2`, `${c}-price2`, 'price');
     makeInput(`wrap-${c}-cost2`, `${c}-cost2`, 'price');
   });
 }
@@ -374,6 +360,8 @@ function makeInput(wrapperId, id, tab) {
     if (!busy) {
       const c = CURRENCIES.find(x => id.startsWith(x));
       master = c || master;
+      // Track which price-tab field was last typed
+      if(tab==='price') priceInputLast = id.endsWith('-price2');
       updatePins(); updateBadges();
       tab==='calc' ? calcFromMaster() : calcPFromMaster();
     }
@@ -470,7 +458,7 @@ function setMaster(cur){master=cur;updatePins();updateBadges();recalcAll();}
 function updatePins(){
   CURRENCIES.forEach(c=>{
     document.getElementById('lock-'+c).classList.toggle('locked',c===master);
-    ['rev','cost','cost2'].forEach(f=>setPinned(c+'-'+f,c===master));
+    ['rev','cost','price2','cost2'].forEach(f=>setPinned(c+'-'+f,c===master));
   });
 }
 function updateBadges(){
@@ -524,13 +512,46 @@ function calcFromMaster(){
 
 function calcPFromMaster(){
   if(!currentGP) return;
+  const price=getRaw(master+'-price2');
   const cost=getRaw(master+'-cost2');
-  if(isNaN(cost)||!cost){CURRENCIES.forEach(c=>hideBd(c+'-price-bd'));return;}
-  const costUSD=toUSD(cost,master),priceUSD=costUSD/(1-currentGP/100),profitUSD=priceUSD-costUSD;
+  const hasPrice=!isNaN(price)&&price>0;
+  const hasCost=!isNaN(cost)&&cost>0;
+  if(!hasPrice&&!hasCost){CURRENCIES.forEach(c=>hideBd(c+'-price-bd'));return;}
+
+  let priceUSD, costUSD;
+  if(hasPrice&&!hasCost){
+    // entered price → calculate cost
+    priceUSD=toUSD(price,master);
+    costUSD=priceUSD*(1-currentGP/100);
+  } else if(hasCost&&!hasPrice){
+    // entered cost → calculate price
+    costUSD=toUSD(cost,master);
+    priceUSD=costUSD/(1-currentGP/100);
+  } else {
+    // both entered → use whichever was last typed (priceInputLast flag)
+    if(priceInputLast){
+      priceUSD=toUSD(price,master);
+      costUSD=priceUSD*(1-currentGP/100);
+    } else {
+      costUSD=toUSD(cost,master);
+      priceUSD=costUSD/(1-currentGP/100);
+    }
+  }
+  const profitUSD=priceUSD-costUSD;
   busy=true;
   CURRENCIES.forEach(c=>{
     const pr=fromUSD(priceUSD,c),co=fromUSD(costUSD,c),pf=fromUSD(profitUSD,c);
-    if(c!==master) setRaw(c+'-cost2',Math.round(co));
+    // Fill the calculated (opposite) field for every currency including master
+    if(c===master){
+      if(hasPrice&&!hasCost) setRaw(c+'-cost2',Math.round(co));
+      else if(hasCost&&!hasPrice) setRaw(c+'-price2',Math.round(pr));
+      else if(priceInputLast) setRaw(c+'-cost2',Math.round(co));
+      else setRaw(c+'-price2',Math.round(pr));
+    } else {
+      // Fill both fields for non-master currencies
+      setRaw(c+'-price2',Math.round(pr));
+      setRaw(c+'-cost2',Math.round(co));
+    }
     showBd(c+'-price-bd', bdRow('Selling Price',fmt(pr,c),'price')+bdRow('Cost',fmt(co,c),'')+bdRow('Profit',fmt(pf,c),'profit'));
   });
   busy=false;
@@ -543,80 +564,95 @@ function resetAll(tab){
   busy=true;
   CURRENCIES.forEach(c=>{
     if(tab==='calc'){setRaw(c+'-rev',null);setRaw(c+'-cost',null);}
-    else setRaw(c+'-cost2',null);
+    else { setRaw(c+'-price2',null); setRaw(c+'-cost2',null); }
   });
   busy=false;
   if(tab==='calc'){resetTop();clearAmounts('calc');}else clearAmounts('price');
 }
 
-// ── Snapshot ──────────────────────────────────────────────────────────────────
-function saveSnapshot(tab){
-  const now=new Date(),pad=n=>String(n).padStart(2,'0');
+// ── Snapshot (PNG image) ─────────────────────────────────────────────────────
+async function saveSnapshot(tab){
+  const now=new Date(), pad=n=>String(n).padStart(2,'0');
   const dateStr=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
   const timeStr=pad(now.getHours())+'-'+pad(now.getMinutes());
-  const displayTS=DAYS[now.getDay()]+', '+pad(now.getDate())+' '+now.toLocaleDateString('en',{month:'short'})+' '+now.getFullYear()+' at '+pad(now.getHours())+':'+pad(now.getMinutes());
-  const others=CURRENCIES.filter(c=>c!=='USD');
-  const rateText='1 USD = '+others.map(c=>SYM[c]+rates[c].toFixed(4)).join(' · ');
-  const gpDisplay=document.getElementById('gp-display').textContent;
-  const gpClass2=document.getElementById('gp-display').className;
-  const gpChosen=document.getElementById('gp-chosen').textContent;
-  function fmtN(v){return v!==null&&!isNaN(v)?Math.round(v).toLocaleString('en'):'0';}
-  const colsHtml=CURRENCIES.map(c=>{
-    const isPinned=c===master;
-    const badge=document.getElementById('badge-'+c)?.textContent||'';
-    if(tab==='calc'){
-      const rev=rawVal[c+'-rev'],cost=rawVal[c+'-cost'];
-      const bd=document.getElementById(c+'-calc-bd')?.innerHTML||'';
-      return `<div class="cur-card"><div class="cur-head"><div><div class="cur-name">${CUR_SHORT[c]}</div><div class="cur-rate">${badge}</div></div></div><div class="cur-body">
-        <div class="field"><label>Selling Price</label><div style="padding:10px 12px;font-size:17px;border-radius:10px;border:1px solid ${isPinned?'#0F6E56':'#d4d2cb'};background:#fff;color:${rev===null?'#c8c6be':'#1a1a18'}">${fmtN(rev)}</div></div>
-        <div class="field"><label>Cost</label><div style="padding:10px 12px;font-size:17px;border-radius:10px;border:1px solid ${isPinned?'#0F6E56':'#d4d2cb'};background:#fff;color:${cost===null?'#c8c6be':'#1a1a18'}">${fmtN(cost)}</div></div>
-        <div class="breakdown">${bd}</div></div></div>`;
-    } else {
-      const cost2=rawVal[c+'-cost2'];
-      const bd=document.getElementById(c+'-price-bd')?.innerHTML||'';
-      return `<div class="cur-card"><div class="cur-head"><div><div class="cur-name">${CUR_SHORT[c]}</div><div class="cur-rate">${badge}</div></div></div><div class="cur-body">
-        <div class="field"><label>Cost</label><div style="padding:10px 12px;font-size:17px;border-radius:10px;border:1px solid ${isPinned?'#0F6E56':'#d4d2cb'};background:#fff;color:${cost2===null?'#c8c6be':'#1a1a18'}">${fmtN(cost2)}</div></div>
-        <div class="breakdown">${bd}</div></div></div>`;
-    }
-  }).join('');
+  const displayTS=DAYS[now.getDay()]+', '+pad(now.getDate())+' '+now.toLocaleDateString('en',{month:'short'})+' '+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes());
 
-  const topHtml=tab==='calc'
-    ?`<div class="result-label">Gross Profit</div><div class="${gpClass2}">${gpDisplay}</div>`
-    :`<div class="result-label">Target GP%</div><div class="gp-chosen">${gpChosen}</div>`;
+  // Build a clean off-screen div to capture
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:390px;background:#f5f4ef;font-family:-apple-system,BlinkMacSystemFont,SF Pro Text,sans-serif;padding:16px;';
 
-  const html=`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GP Snapshot — ${displayTS}</title>
-<style>*{box-sizing:border-box;margin:0;padding:0;}body{background:#f5f4ef;font-family:-apple-system,sans-serif;padding:16px;}
-.banner{background:#185FA5;color:#fff;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:12px;}
-.banner b{display:block;font-size:14px;margin-bottom:2px;}
-.rate-bar{background:#eceae3;border:1px solid #d4d2cb;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#888780;}
-.result-card{background:#eceae3;border:1px solid #d4d2cb;border-radius:14px;padding:20px 16px;text-align:center;margin-bottom:12px;}
-.result-label{font-size:11px;color:#888780;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
-.gp-big{font-size:52px;font-weight:300;color:#1a1a18;}.gp-big.good{color:#0F6E56;}.gp-big.mid{color:#854F0B;}.gp-big.bad{color:#A32D2D;}
-.gp-chosen{font-size:52px;font-weight:300;color:#0F6E56;}
-.cur-card{background:#eceae3;border:1px solid #d4d2cb;border-radius:14px;margin-bottom:10px;overflow:hidden;}
-.cur-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #d4d2cb;}
-.cur-name{font-size:15px;font-weight:600;}.cur-rate{font-size:11px;color:#888780;}
-.cur-body{padding:12px 14px;}
-.field{margin-bottom:10px;}
-.field label{font-size:11px;color:#888780;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;}
-.breakdown{border-top:1px solid #d4d2cb;padding-top:10px;margin-top:6px;}
-.bd-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #d4d2cb;}
-.bd-row:last-child{border-bottom:none;}
-.bd-label{font-size:13px;color:#888780;}.bd-val{font-size:14px;font-weight:600;color:#1a1a18;}
-.bd-val.profit{color:#0F6E56;}.bd-val.price{color:#185FA5;}
-</style></head><body>
-<div class="banner"><b>📸 GP Snapshot · ${tab==='calc'?'Calculate GP%':'Find Selling Price'}</b>${displayTS}</div>
-<div class="rate-bar">${rateText}</div>
-<div class="result-card">${topHtml}</div>
-${colsHtml}
-</body></html>`;
+  // Header banner
+  const others = CURRENCIES.filter(c=>c!=='USD');
+  const rateText = '1 USD = '+others.map(c=>SYM[c]+rates[c].toFixed(4)).join('  ·  ');
+  const gpVal = tab==='calc' ? document.getElementById('gp-display').textContent : document.getElementById('gp-chosen').textContent;
+  const gpCls = tab==='calc' ? document.getElementById('gp-display').className : 'gp-big good';
+  const gpColor = gpCls.includes('good')?'#0F6E56':gpCls.includes('mid')?'#854F0B':gpCls.includes('bad')?'#A32D2D':'#0F6E56';
 
-  const blob=new Blob([html],{type:'text/html'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download='GP-snapshot_'+(tab==='calc'?'calc':'price')+'_'+dateStr+'_'+timeStr+'.html';
-  document.body.appendChild(a); a.click();
-  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+  wrap.innerHTML = `
+    <div style="background:#0F6E56;color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:13px;font-weight:700;">GP Calculator</div>
+        <div style="font-size:10px;opacity:.8;">${tab==='calc'?'Calculate GP%':'Calculate Price/Cost'}</div>
+      </div>
+      <div style="font-size:11px;opacity:.85;">${displayTS}</div>
+    </div>
+    <div style="background:#eceae3;border:1px solid #d4d2cb;border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#888780;">${rateText}</div>
+    <div style="background:#eceae3;border:1px solid #d4d2cb;border-radius:12px;padding:14px;text-align:center;margin-bottom:10px;">
+      <div style="font-size:10px;color:#888780;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">${tab==='calc'?'Gross Profit':'Target GP%'}</div>
+      <div style="font-size:48px;font-weight:300;color:${gpColor};line-height:1;">${gpVal}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      ${CURRENCIES.map(c=>{
+        const isPinned=c===master;
+        const badge=document.getElementById('badge-'+c)?.textContent||'';
+        const bd=document.getElementById(c+'-'+tab+'-bd');
+        const bdHtml=bd?bd.innerHTML:'';
+        const fields = tab==='calc'
+          ? [['Selling Price', rawVal[c+'-rev']], ['Cost', rawVal[c+'-cost']]]
+          : [['Selling Price', rawVal[c+'-price2']], ['Cost', rawVal[c+'-cost2']]];
+        const fieldsHtml = fields.map(([lbl,v])=>`
+          <div style="margin-bottom:6px;">
+            <div style="font-size:9px;color:#888780;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">${lbl}</div>
+            <div style="padding:5px 8px;font-size:13px;border-radius:7px;border:1px solid ${isPinned?'#0F6E56':'#d4d2cb'};background:#fff;color:${v==null?'#c8c6be':'#1a1a18'};">${v!=null?Math.round(v).toLocaleString('en'):'—'}</div>
+          </div>`).join('');
+        const bdStyled = bdHtml.replace(/class="bd-row"/g,'style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #d4d2cb;font-size:11px;"')
+          .replace(/class="bd-label"/g,'style="color:#888780;"')
+          .replace(/class="bd-val price"/g,'style="font-weight:600;color:#185FA5;"')
+          .replace(/class="bd-val profit"/g,'style="font-weight:600;color:#0F6E56;"')
+          .replace(/class="bd-val"/g,'style="font-weight:600;color:#1a1a18;"');
+        return `<div style="background:#eceae3;border:1px solid ${isPinned?'#0F6E56':'#d4d2cb'};border-radius:11px;overflow:hidden;">
+          <div style="padding:5px 9px;border-bottom:1px solid #d4d2cb;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:#1a1a18;">${CUR_SHORT[c]}</div>
+            <div style="font-size:10px;color:#888780;">${badge}</div>
+          </div>
+          <div style="padding:7px 9px;">
+            ${fieldsHtml}
+            ${bdHtml?`<div style="border-top:1px solid #d4d2cb;padding-top:5px;margin-top:3px;">${bdStyled}</div>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  document.body.appendChild(wrap);
+
+  try {
+    const canvas = await html2canvas(wrap, {
+      scale: 3,
+      backgroundColor: '#f5f4ef',
+      logging: false,
+      useCORS: true
+    });
+    const link = document.createElement('a');
+    link.download = 'GP-snapshot_'+(tab==='calc'?'calc':'price')+'_'+dateStr+'_'+timeStr+'.png';
+    link.href = canvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(()=>link.remove(), 500);
+  } catch(e) {
+    alert('Could not save image. Try again.');
+  } finally {
+    document.body.removeChild(wrap);
+  }
 }
 
 // ── Rates sheet ───────────────────────────────────────────────────────────────
