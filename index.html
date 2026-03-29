@@ -222,10 +222,10 @@ html, body { height: 100%; background: var(--bg); font-family: -apple-system, Bl
 
     <!-- Save button -->
     <div id="save-calc" class="panel active">
-      <button class="btn-save" id="save-btn-calc">📸 Save as image</button>
+      <button class="btn-save" id="save-btn-calc">📤 Share to WhatsApp</button>
     </div>
     <div id="save-price" class="panel">
-      <button class="btn-save" id="save-btn-price">📸 Save as image</button>
+      <button class="btn-save" id="save-btn-price">📤 Share to WhatsApp</button>
     </div>
 
     <div class="bottom-pad"></div>
@@ -570,7 +570,7 @@ function resetAll(tab){
   if(tab==='calc'){resetTop();clearAmounts('calc');}else clearAmounts('price');
 }
 
-// ── Snapshot (PNG image) ─────────────────────────────────────────────────────
+// ── Snapshot → WhatsApp share ────────────────────────────────────────────────
 async function saveSnapshot(tab){
   const now=new Date(), pad=n=>String(n).padStart(2,'0');
   const dateStr=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
@@ -642,17 +642,42 @@ async function saveSnapshot(tab){
       logging: false,
       useCORS: true
     });
-    const link = document.createElement('a');
-    link.download = 'GP-snapshot_'+(tab==='calc'?'calc':'price')+'_'+dateStr+'_'+timeStr+'.png';
-    link.href = canvas.toDataURL('image/png');
-    document.body.appendChild(link);
-    link.click();
-    setTimeout(()=>link.remove(), 500);
+
+    // Convert canvas to blob
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'GP-snapshot_'+(tab==='calc'?'calc':'price')+'_'+dateStr+'_'+timeStr+'.png', {type:'image/png'});
+
+      // Try Web Share API (works on iPhone Safari — shares to WhatsApp, iMessage, etc.)
+      if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'GP Calculation',
+            text: (tab==='calc' ? 'GP: '+document.getElementById('gp-display').textContent : 'Target GP: '+document.getElementById('gp-chosen').textContent)
+          });
+        } catch(e) {
+          if (e.name !== 'AbortError') fallbackDownload(canvas, tab, dateStr, timeStr);
+        }
+      } else {
+        // Fallback: download the image
+        fallbackDownload(canvas, tab, dateStr, timeStr);
+      }
+    }, 'image/png');
+
   } catch(e) {
-    alert('Could not save image. Try again.');
+    alert('Could not create image. Try again.');
   } finally {
     document.body.removeChild(wrap);
   }
+}
+
+function fallbackDownload(canvas, tab, dateStr, timeStr){
+  const link = document.createElement('a');
+  link.download = 'GP-snapshot_'+(tab==='calc'?'calc':'price')+'_'+dateStr+'_'+timeStr+'.png';
+  link.href = canvas.toDataURL('image/png');
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(()=>link.remove(), 500);
 }
 
 // ── Rates sheet ───────────────────────────────────────────────────────────────
