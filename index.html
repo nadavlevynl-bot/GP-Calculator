@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="GP Calc">
+<meta name="theme-color" content="#0F6E56">
+<link rel="manifest" href="./manifest.json">
+<title>GP Calculator</title>
+<style>
+:root {
+  --bg: #f5f4ef;
+  --card: #eceae3;
+  --border: #d4d2cb;
+  --text: #1a1a18;
+  --muted: #888780;
+  --green: #0F6E56;
+  --amber: #854F0B;
+  --red: #A32D2D;
+  --blue: #185FA5;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; }
+
+/* ── Layout ── */
+.app { display: flex; flex-direction: column; height: 100%; padding-top: var(--safe-top); }
+
+/* ── Header ── */
+.header {
+  background: var(--green); color: #fff;
+  padding: 14px 16px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-title { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+.rate-pill {
+  font-size: 11px; color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.15); border-radius: 20px;
+  padding: 4px 10px; cursor: pointer;
+}
+
+/* ── Tab bar ── */
+.tabs {
+  display: flex; background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  flex: 1; padding: 12px 8px; font-size: 13px; font-weight: 500;
+  color: var(--muted); border: none; background: transparent;
+  font-family: inherit; cursor: pointer; border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+/* ── Scroll area ── */
+.scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; }
+
+/* ── Rate bar (modal sheet) ── */
+.sheet-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  z-index: 100; display: none; align-items: flex-end;
+}
+.sheet-overlay.open { display: flex; }
+.sheet {
+  width: 100%; background: #fff; border-radius: 20px 20px 0 0;
+  padding: 20px 20px calc(20px + var(--safe-bot));
+}
+.sheet-handle { width: 36px; height: 4px; background: #ccc; border-radius: 2px; margin: 0 auto 18px; }
+.sheet-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 16px; }
+.sheet-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.sheet-row label { font-size: 13px; color: var(--muted); width: 40px; }
+.sheet-row input {
+  flex: 1; padding: 10px 12px; font-size: 15px; font-family: inherit;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+  color: var(--text); outline: none;
+}
+.sheet-row input:focus { border-color: var(--green); }
+.sheet-row .cur-label { font-size: 13px; font-weight: 600; color: var(--text); width: 36px; }
+.sheet-close {
+  width: 100%; padding: 14px; margin-top: 4px; font-size: 15px; font-weight: 600;
+  background: var(--green); color: #fff; border: none; border-radius: 12px;
+  font-family: inherit; cursor: pointer;
+}
+
+/* ── GP result ── */
+.result-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px 16px; text-align: center; margin-bottom: 14px;
+}
+.result-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.gp-big { font-size: 56px; font-weight: 300; line-height: 1; color: var(--text); }
+.gp-big.good { color: var(--green); }
+.gp-big.mid  { color: var(--amber); }
+.gp-big.bad  { color: var(--red); }
+.gp-chosen { font-size: 56px; font-weight: 300; line-height: 1; color: var(--green); margin-bottom: 14px; }
+
+/* ── GP pills ── */
+.gp-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.gp-pill {
+  height: 34px; padding: 0 14px; border-radius: 20px;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--muted); font-size: 13px; font-weight: 500;
+  font-family: inherit; cursor: pointer; transition: all .1s;
+}
+.gp-pill.active { border-color: var(--green); color: var(--green); background: rgba(15,110,86,0.06); font-weight: 700; }
+.pill-custom {
+  height: 34px; border-radius: 20px; border: 1.5px solid var(--border);
+  background: transparent; display: inline-flex; align-items: center;
+  padding: 0 10px; gap: 2px; cursor: text;
+}
+.pill-custom input {
+  width: 38px; border: none; outline: none; background: transparent;
+  font-size: 13px; font-weight: 500; font-family: inherit; color: var(--muted);
+  text-align: right; -moz-appearance: textfield;
+}
+.pill-custom input::-webkit-inner-spin-button,
+.pill-custom input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.pill-custom .pct { font-size: 13px; font-weight: 500; color: var(--muted); }
+.pill-custom.active { border-color: var(--green); }
+.pill-custom.active input, .pill-custom.active .pct { color: var(--green); }
+
+/* ── Currency cards ── */
+.cur-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; margin-bottom: 10px; overflow: hidden;
+}
+.cur-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+}
+.cur-name { font-size: 15px; font-weight: 600; color: var(--text); }
+.cur-rate { font-size: 11px; color: var(--muted); }
+.pin-btn {
+  font-size: 16px; border: none; background: transparent; cursor: pointer;
+  opacity: 0.25; transition: opacity .15s; padding: 2px 4px;
+}
+.pin-btn.locked { opacity: 1; }
+.cur-body { padding: 12px 14px; }
+.field { margin-bottom: 10px; }
+.field label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+/* Formatted input */
+.fmt-wrap { position: relative; width: 100%; height: 44px; }
+.fmt-display {
+  position: absolute; inset: 0;
+  padding: 10px 12px; font-size: 17px; border-radius: 10px;
+  border: 1px solid var(--border); background: #fff; color: var(--text);
+  font-family: inherit; cursor: text; line-height: 22px;
+  white-space: nowrap; overflow: hidden; z-index: 1;
+}
+.fmt-display.pinned { border-color: var(--green); }
+.fmt-display.placeholder { color: #c8c6be; }
+.fmt-real {
+  position: absolute; inset: 0; z-index: 2;
+  width: 100%; height: 100%; padding: 10px 12px;
+  font-size: 17px; font-family: inherit; border-radius: 10px;
+  border: 1px solid var(--border); background: #fff; color: var(--text); opacity: 0;
+}
+.fmt-real:focus { opacity: 1; outline: 2px solid var(--green); outline-offset: -1px; border-color: var(--green); }
+.fmt-real.pinned { border-color: var(--green); }
+
+/* ── Breakdown rows ── */
+.breakdown { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 6px; }
+.bd-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.bd-row:last-child { border-bottom: none; }
+.bd-label { font-size: 13px; color: var(--muted); }
+.bd-val { font-size: 14px; font-weight: 600; color: var(--text); }
+.bd-val.profit { color: var(--green); }
+.bd-val.price  { color: var(--blue); }
+
+/* ── Buttons ── */
+.btn-clear {
+  width: 100%; margin-top: 12px; padding: 12px;
+  font-size: 14px; font-weight: 500; border-radius: 10px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font-family: inherit; cursor: pointer;
+}
+.btn-clear:active { background: var(--border); }
+.btn-save {
+  width: 100%; margin-top: 8px; padding: 12px;
+  font-size: 14px; font-weight: 500; border-radius: 10px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--blue); font-family: inherit; cursor: pointer;
+}
+.btn-save:active { background: rgba(24,95,165,0.08); }
+
+/* ── Bottom safe area ── */
+.bottom-pad { height: var(--safe-bot); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">GP Calculator</div>
+    <div class="rate-pill" id="rate-pill">Rates ✎</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" id="tab-calc">Calculate GP%</button>
+    <button class="tab" id="tab-price">Find Selling Price</button>
+  </div>
+
+  <!-- Scrollable content -->
+  <div class="scroll" id="scroll-area">
+
+    <!-- GP Result -->
+    <div class="result-card">
+      <div id="top-calc" class="panel active">
+        <div class="result-label">Gross Profit</div>
+        <div class="gp-big" id="gp-display">—</div>
+      </div>
+      <div id="top-price" class="panel">
+        <div class="result-label">Target GP%</div>
+        <div class="gp-chosen" id="gp-chosen">60%</div>
+        <div class="gp-row">
+          <button class="gp-pill" id="gpbtn-50">50%</button>
+          <button class="gp-pill" id="gpbtn-55">55%</button>
+          <button class="gp-pill" id="gpbtn-60">60%</button>
+          <button class="gp-pill" id="gpbtn-65">65%</button>
+          <button class="gp-pill" id="gpbtn-70">70%</button>
+          <button class="gp-pill" id="gpbtn-75">75%</button>
+          <div class="pill-custom" id="pm">
+            <input type="number" id="gp-manual" placeholder="—" min="1" max="99" step="0.1">
+            <span class="pct" id="pm-pct">%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Currency cards -->
+    <div id="cols-area"></div>
+
+    <!-- Save button -->
+    <div id="save-calc" class="panel active">
+      <button class="btn-save" id="save-btn-calc">💾 Save copy of this calculation</button>
+    </div>
+    <div id="save-price" class="panel">
+      <button class="btn-save" id="save-btn-price">💾 Save copy of this calculation</button>
+    </div>
+
+    <div class="bottom-pad"></div>
+  </div>
+</div>
+
+<!-- Rates sheet -->
+<div class="sheet-overlay" id="sheet-overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Exchange Rates (vs USD)</div>
+    <div class="sheet-row">
+      <span class="cur-label">ILS ₪</span>
+      <input type="text" inputmode="decimal" id="rate-ILS" placeholder="3.74">
+    </div>
+    <div class="sheet-row">
+      <span class="cur-label">SGD S$</span>
+      <input type="text" inputmode="decimal" id="rate-SGD" placeholder="1.34">
+    </div>
+    <div class="sheet-row">
+      <span class="cur-label">EUR €</span>
+      <input type="text" inputmode="decimal" id="rate-EUR" placeholder="0.92">
+    </div>
+    <div style="font-size:11px;color:#aaa;margin-bottom:14px;">Tap a field to edit. Rates are saved automatically.</div>
+    <button class="sheet-close" id="sheet-close">Done</button>
+  </div>
+</div>
+
+<script>
+const CURRENCIES = ['USD','ILS','SGD','EUR'];
+const CUR_LABEL  = {USD:'US Dollar', ILS:'Israeli Shekel', SGD:'Singapore Dollar', EUR:'Euro'};
+const CUR_SHORT  = {USD:'$ USD', ILS:'₪ ILS', SGD:'S$ SGD', EUR:'€ EUR'};
+const SYM        = {USD:'$', ILS:'₪', SGD:'S$', EUR:'€'};
+const DAYS       = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const PRESETS    = [50,55,60,65,70,75];
+
+let rates = {USD:1, ILS:3.74, SGD:1.34, EUR:0.92};
+let master='USD', activeTab='calc', busy=false, currentGP=60;
+const rawVal = {};
+
+// ── Load saved rates from localStorage ───────────────────────────────────────
+function loadSavedRates() {
+  try {
+    ['ILS','SGD','EUR'].forEach(c => {
+      const v = localStorage.getItem('rate_'+c);
+      if (v) {
+        rates[c] = parseFloat(v);
+        const inp = document.getElementById('rate-'+c);
+        if (inp) inp.value = rates[c];
+      }
+    });
+  } catch(e) {}
+}
+
+function saveRatesToStorage() {
+  try {
+    ['ILS','SGD','EUR'].forEach(c => localStorage.setItem('rate_'+c, rates[c]));
+  } catch(e) {}
+}
+
+// ── Build currency cards ──────────────────────────────────────────────────────
+function buildCols() {
+  const area = document.getElementById('cols-area');
+  area.innerHTML = CURRENCIES.map(c => `
+    <div class="cur-card" id="card-${c}">
+      <div class="cur-head">
+        <div>
+          <div class="cur-name">${CUR_SHORT[c]}</div>
+          <div class="cur-rate" id="badge-${c}">${c==='USD'?'Base ★':'—'}</div>
+        </div>
+        <button class="pin-btn${c==='USD'?' locked':''}" id="lock-${c}" data-cur="${c}">📌</button>
+      </div>
+      <div class="cur-body">
+        <div id="${c}-calc" class="panel active">
+          <div class="field"><label>Selling Price</label><div class="fmt-wrap" id="wrap-${c}-rev"></div></div>
+          <div class="field"><label>Cost</label><div class="fmt-wrap" id="wrap-${c}-cost"></div></div>
+          <div class="breakdown" id="${c}-calc-bd" style="display:none"></div>
+          <button class="btn-clear reset-calc-btn">Clear</button>
+        </div>
+        <div id="${c}-price" class="panel">
+          <div class="field"><label>Cost</label><div class="fmt-wrap" id="wrap-${c}-cost2"></div></div>
+          <div class="breakdown" id="${c}-price-bd" style="display:none"></div>
+          <button class="btn-clear reset-price-btn">Clear</button>
+        </div>
+      </div>
+    </div>`).join('');
+
+  CURRENCIES.forEach(c => {
+    ['rev','cost'].forEach(f => makeInput(`wrap-${c}-${f}`, `${c}-${f}`, 'calc'));
+    makeInput(`wrap-${c}-cost2`, `${c}-cost2`, 'price');
+  });
+}
+
+// ── Formatted input ───────────────────────────────────────────────────────────
+function makeInput(wrapperId, id, tab) {
+  const wrap = document.getElementById(wrapperId);
+  rawVal[id] = null;
+
+  const disp = document.createElement('div');
+  disp.className = 'fmt-display placeholder';
+  disp.id = 'disp-' + id;
+  disp.textContent = '0';
+
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.inputMode = 'decimal';
+  inp.className = 'fmt-real';
+  inp.id = 'inp-' + id;
+  inp.autocomplete = 'off';
+
+  wrap.appendChild(disp);
+  wrap.appendChild(inp);
+
+  inp.addEventListener('focus', () => {
+    disp.style.opacity = '0';
+    inp.value = rawVal[id] !== null ? String(rawVal[id]) : '';
+    inp.select();
+  });
+  inp.addEventListener('blur', () => {
+    disp.style.opacity = '1';
+    refreshDisp(id);
+  });
+  inp.addEventListener('input', () => {
+    let v = inp.value.replace(/[^0-9.]/g, '');
+    const pts = v.split('.');
+    if (pts.length > 2) v = pts[0]+'.'+pts.slice(1).join('');
+    inp.value = v;
+    const num = parseFloat(v);
+    rawVal[id] = (v===''||isNaN(num)) ? null : num;
+    if (!busy) {
+      const c = CURRENCIES.find(x => id.startsWith(x));
+      master = c || master;
+      updatePins(); updateBadges();
+      tab==='calc' ? calcFromMaster() : calcPFromMaster();
+    }
+  });
+}
+
+function refreshDisp(id) {
+  const disp = document.getElementById('disp-'+id);
+  if (!disp) return;
+  const v = rawVal[id];
+  if (v===null) { disp.textContent='0'; disp.classList.add('placeholder'); }
+  else { disp.textContent=Math.round(v).toLocaleString('en'); disp.classList.remove('placeholder'); }
+}
+
+function setRaw(id, num) {
+  rawVal[id] = (num===null||isNaN(num)) ? null : num;
+  refreshDisp(id);
+  const h = document.getElementById('inp-'+id);
+  if (h && document.activeElement!==h) h.value = rawVal[id]!==null ? String(rawVal[id]) : '';
+}
+function getRaw(id) { return rawVal[id]!==null ? rawVal[id] : NaN; }
+function setPinned(id, on) {
+  const d=document.getElementById('disp-'+id);
+  const i=document.getElementById('inp-'+id);
+  if(d) d.classList.toggle('pinned',on);
+  if(i) i.classList.toggle('pinned',on);
+}
+
+// ── Rates ─────────────────────────────────────────────────────────────────────
+function fmtDate(s){const d=new Date(s+'T12:00:00');return DAYS[d.getDay()]+', '+String(d.getDate()).padStart(2,'0')+' '+d.toLocaleDateString('en',{month:'short'})+' '+d.getFullYear();}
+
+function fetchWithTimeout(url,ms){
+  return Promise.race([fetch(url),new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms))]);
+}
+
+async function loadLiveRates(){
+  const pill = document.getElementById('rate-pill');
+  const apis = [
+    async()=>{const r=await fetchWithTimeout('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json?'+Date.now(),5000);const d=await r.json();return{ILS:d.usd.ils,SGD:d.usd.sgd,EUR:d.usd.eur,date:d.date};},
+    async()=>{const r=await fetchWithTimeout('https://latest.currency-api.pages.dev/v1/currencies/usd.json?'+Date.now(),5000);const d=await r.json();return{ILS:d.usd.ils,SGD:d.usd.sgd,EUR:d.usd.eur,date:d.date};}
+  ];
+  for (const api of apis) {
+    try {
+      const data = await api();
+      if (data&&data.ILS&&data.SGD&&data.EUR) {
+        rates.ILS=data.ILS; rates.SGD=data.SGD; rates.EUR=data.EUR;
+        // Update sheet inputs
+        ['ILS','SGD','EUR'].forEach(c=>{
+          const inp=document.getElementById('rate-'+c);
+          if(inp) inp.value=rates[c].toFixed(4);
+        });
+        saveRatesToStorage();
+        pill.textContent=fmtDate(data.date)+' ✎';
+        updateBadges(); recalcAll(); return;
+      }
+    } catch(e) {}
+  }
+  // Failed — use saved/default rates, show edit option
+  pill.textContent='Rates ✎ (manual)';
+  updateBadges(); recalcAll();
+}
+
+// ── Pills ─────────────────────────────────────────────────────────────────────
+function setPillActive(v){
+  PRESETS.forEach(p=>document.getElementById('gpbtn-'+p).classList.toggle('active',p===v));
+  const pm=document.getElementById('pm');
+  const isCustom=!PRESETS.includes(v);
+  pm.classList.toggle('active',isCustom);
+  const inp=document.getElementById('gp-manual');
+  inp.style.color=isCustom?'var(--green)':'';
+  document.getElementById('pm-pct').style.color=isCustom?'var(--green)':'';
+}
+function selectGP(gp){currentGP=gp;setPillActive(gp);document.getElementById('gp-manual').value='';document.getElementById('gp-chosen').textContent=gp+'%';calcPFromMaster();}
+function onManualGP(){
+  const val=parseFloat(document.getElementById('gp-manual').value);
+  if(!isNaN(val)&&val>0&&val<100){currentGP=val;setPillActive(val);document.getElementById('gp-chosen').textContent=val.toFixed(1)+'%';calcPFromMaster();}
+  else{currentGP=null;setPillActive(null);document.getElementById('gp-chosen').textContent='—';clearAmounts('price');}
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function switchTab(t){
+  activeTab=t;
+  ['calc','price'].forEach(x=>{
+    document.getElementById('tab-'+x).classList.toggle('active',x===t);
+    document.getElementById('top-'+x).classList.toggle('active',x===t);
+    document.getElementById('save-'+x).classList.toggle('active',x===t);
+    CURRENCIES.forEach(c=>document.getElementById(c+'-'+x).classList.toggle('active',x===t));
+  });
+  if(t==='calc'){resetTop();clearAmounts('calc');}else calcPFromMaster();
+}
+
+// ── Master currency ───────────────────────────────────────────────────────────
+function setMaster(cur){master=cur;updatePins();updateBadges();recalcAll();}
+function updatePins(){
+  CURRENCIES.forEach(c=>{
+    document.getElementById('lock-'+c).classList.toggle('locked',c===master);
+    ['rev','cost','cost2'].forEach(f=>setPinned(c+'-'+f,c===master));
+  });
+}
+function updateBadges(){
+  CURRENCIES.forEach(c=>{
+    const b=document.getElementById('badge-'+c);
+    if(c===master){b.textContent='Base ★';return;}
+    b.textContent='1 '+SYM[master]+' = '+SYM[c]+((1/rates[master])*rates[c]).toFixed(4);
+  });
+  // Update rate pill text
+  const others=CURRENCIES.filter(c=>c!==master);
+  const parts=others.map(c=>SYM[c]+((1/rates[master])*rates[c]).toFixed(2));
+  const pill=document.getElementById('rate-pill');
+  if(!pill.textContent.includes(' ')) pill.textContent='Rates ✎';
+}
+
+// ── Calc ──────────────────────────────────────────────────────────────────────
+function toUSD(v,c){return v/rates[c];}
+function fromUSD(v,c){return v*rates[c];}
+function fmt(v,c){return SYM[c]+Math.round(v).toLocaleString('en');}
+function gpClass(gp){return 'gp-big'+(gp>=40?' good':gp>=20?' mid':' bad');}
+function bdRow(l,v,cls){return `<div class="bd-row"><span class="bd-label">${l}</span><span class="bd-val${cls?' '+cls:''}">${v}</span></div>`;}
+
+function showBd(id, html){
+  const el=document.getElementById(id);
+  el.innerHTML=html; el.style.display='block';
+}
+function hideBd(id){
+  const el=document.getElementById(id);
+  el.innerHTML=''; el.style.display='none';
+}
+
+function calcFromMaster(){
+  const rev=getRaw(master+'-rev'),cost=getRaw(master+'-cost');
+  if(isNaN(rev)||isNaN(cost)||!rev||!cost){resetTop();CURRENCIES.forEach(c=>hideBd(c+'-calc-bd'));return;}
+  if(cost>=rev){
+    document.getElementById('gp-display').textContent='⚠ Cost ≥ Price';
+    document.getElementById('gp-display').className='gp-big bad';
+    CURRENCIES.forEach(c=>hideBd(c+'-calc-bd')); return;
+  }
+  const revUSD=toUSD(rev,master),costUSD=toUSD(cost,master),gp=((revUSD-costUSD)/revUSD)*100;
+  document.getElementById('gp-display').textContent=gp.toFixed(1)+'%';
+  document.getElementById('gp-display').className=gpClass(gp);
+  busy=true;
+  CURRENCIES.forEach(c=>{
+    const r=fromUSD(revUSD,c),co=fromUSD(costUSD,c),pr=r-co;
+    if(c!==master){setRaw(c+'-rev',Math.round(r));setRaw(c+'-cost',Math.round(co));}
+    showBd(c+'-calc-bd', bdRow('Selling Price',fmt(r,c),'price')+bdRow('Cost',fmt(co,c),'')+bdRow('Profit',fmt(pr,c),'profit'));
+  });
+  busy=false;
+}
+
+function calcPFromMaster(){
+  if(!currentGP) return;
+  const cost=getRaw(master+'-cost2');
+  if(isNaN(cost)||!cost){CURRENCIES.forEach(c=>hideBd(c+'-price-bd'));return;}
+  const costUSD=toUSD(cost,master),priceUSD=costUSD/(1-currentGP/100),profitUSD=priceUSD-costUSD;
+  busy=true;
+  CURRENCIES.forEach(c=>{
+    const pr=fromUSD(priceUSD,c),co=fromUSD(costUSD,c),pf=fromUSD(profitUSD,c);
+    if(c!==master) setRaw(c+'-cost2',Math.round(co));
+    showBd(c+'-price-bd', bdRow('Selling Price',fmt(pr,c),'price')+bdRow('Cost',fmt(co,c),'')+bdRow('Profit',fmt(pf,c),'profit'));
+  });
+  busy=false;
+}
+
+function recalcAll(){activeTab==='calc'?calcFromMaster():calcPFromMaster();}
+function resetTop(){document.getElementById('gp-display').textContent='—';document.getElementById('gp-display').className='gp-big';}
+function clearAmounts(tab){CURRENCIES.forEach(c=>hideBd(c+'-'+tab+'-bd'));}
+function resetAll(tab){
+  busy=true;
+  CURRENCIES.forEach(c=>{
+    if(tab==='calc'){setRaw(c+'-rev',null);setRaw(c+'-cost',null);}
+    else setRaw(c+'-cost2',null);
+  });
+  busy=false;
+  if(tab==='calc'){resetTop();clearAmounts('calc');}else clearAmounts('price');
+}
+
+// ── Snapshot ──────────────────────────────────────────────────────────────────
+function saveSnapshot(tab){
+  const now=new Date(),pad=n=>String(n).padStart(2,'0');
+  const dateStr=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+  const timeStr=pad(now.getHours())+'-'+pad(now.getMinutes());
+  const displayTS=DAYS[now.getDay()]+', '+pad(now.getDate())+' '+now.toLocaleDateString('en',{month:'short'})+' '+now.getFullYear()+' at '+pad(now.getHours())+':'+pad(now.getMinutes());
+  const others=CURRENCIES.filter(c=>c!=='USD');
+  const rateText='1 USD = '+others.map(c=>SYM[c]+rates[c].toFixed(4)).join(' · ');
+  const gpDisplay=document.getElementById('gp-display').textContent;
+  const gpClass2=document.getElementById('gp-display').className;
+  const gpChosen=document.getElementById('gp-chosen').textContent;
+  function fmtN(v){return v!==null&&!isNaN(v)?Math.round(v).toLocaleString('en'):'0';}
+  const colsHtml=CURRENCIES.map(c=>{
+    const isPinned=c===master;
+    const badge=document.getElementById('badge-'+c)?.textContent||'';
+    if(tab==='calc'){
+      const rev=rawVal[c+'-rev'],cost=rawVal[c+'-cost'];
+      const bd=document.getElementById(c+'-calc-bd')?.innerHTML||'';
+      return `<div class="cur-card"><div class="cur-head"><div><div class="cur-name">${CUR_SHORT[c]}</div><div class="cur-rate">${badge}</div></div></div><div class="cur-body">
+        <div class="field"><label>Selling Price</label><div style="padding:10px 12px;font-size:17px;border-radius:10px;border:1px solid ${isPinned?'#0F6E56':'#d4d2cb'};background:#fff;color:${rev===null?'#c8c6be':'#1a1a18'}">${fmtN(rev)}</div></div>
+        <div class="field"><label>Cost</label><div style="padding:10px 12px;font-size:17px;border-radius:10px;border:1px solid ${isPinned?'#0F6E56':'#d4d2cb'};background:#fff;color:${cost===null?'#c8c6be':'#1a1a18'}">${fmtN(cost)}</div></div>
+        <div class="breakdown">${bd}</div></div></div>`;
+    } else {
+      const cost2=rawVal[c+'-cost2'];
+      const bd=document.getElementById(c+'-price-bd')?.innerHTML||'';
+      return `<div class="cur-card"><div class="cur-head"><div><div class="cur-name">${CUR_SHORT[c]}</div><div class="cur-rate">${badge}</div></div></div><div class="cur-body">
+        <div class="field"><label>Cost</label><div style="padding:10px 12px;font-size:17px;border-radius:10px;border:1px solid ${isPinned?'#0F6E56':'#d4d2cb'};background:#fff;color:${cost2===null?'#c8c6be':'#1a1a18'}">${fmtN(cost2)}</div></div>
+        <div class="breakdown">${bd}</div></div></div>`;
+    }
+  }).join('');
+
+  const topHtml=tab==='calc'
+    ?`<div class="result-label">Gross Profit</div><div class="${gpClass2}">${gpDisplay}</div>`
+    :`<div class="result-label">Target GP%</div><div class="gp-chosen">${gpChosen}</div>`;
+
+  const html=`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GP Snapshot — ${displayTS}</title>
+<style>*{box-sizing:border-box;margin:0;padding:0;}body{background:#f5f4ef;font-family:-apple-system,sans-serif;padding:16px;}
+.banner{background:#185FA5;color:#fff;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:12px;}
+.banner b{display:block;font-size:14px;margin-bottom:2px;}
+.rate-bar{background:#eceae3;border:1px solid #d4d2cb;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#888780;}
+.result-card{background:#eceae3;border:1px solid #d4d2cb;border-radius:14px;padding:20px 16px;text-align:center;margin-bottom:12px;}
+.result-label{font-size:11px;color:#888780;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+.gp-big{font-size:52px;font-weight:300;color:#1a1a18;}.gp-big.good{color:#0F6E56;}.gp-big.mid{color:#854F0B;}.gp-big.bad{color:#A32D2D;}
+.gp-chosen{font-size:52px;font-weight:300;color:#0F6E56;}
+.cur-card{background:#eceae3;border:1px solid #d4d2cb;border-radius:14px;margin-bottom:10px;overflow:hidden;}
+.cur-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #d4d2cb;}
+.cur-name{font-size:15px;font-weight:600;}.cur-rate{font-size:11px;color:#888780;}
+.cur-body{padding:12px 14px;}
+.field{margin-bottom:10px;}
+.field label{font-size:11px;color:#888780;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;}
+.breakdown{border-top:1px solid #d4d2cb;padding-top:10px;margin-top:6px;}
+.bd-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #d4d2cb;}
+.bd-row:last-child{border-bottom:none;}
+.bd-label{font-size:13px;color:#888780;}.bd-val{font-size:14px;font-weight:600;color:#1a1a18;}
+.bd-val.profit{color:#0F6E56;}.bd-val.price{color:#185FA5;}
+</style></head><body>
+<div class="banner"><b>📸 GP Snapshot · ${tab==='calc'?'Calculate GP%':'Find Selling Price'}</b>${displayTS}</div>
+<div class="rate-bar">${rateText}</div>
+<div class="result-card">${topHtml}</div>
+${colsHtml}
+</body></html>`;
+
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='GP-snapshot_'+(tab==='calc'?'calc':'price')+'_'+dateStr+'_'+timeStr+'.html';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+}
+
+// ── Rates sheet ───────────────────────────────────────────────────────────────
+function openSheet(){
+  document.getElementById('sheet-overlay').classList.add('open');
+  document.getElementById('rate-ILS').focus();
+}
+function closeSheet(){
+  document.getElementById('sheet-overlay').classList.remove('open');
+  ['ILS','SGD','EUR'].forEach(c=>{
+    const v=parseFloat(document.getElementById('rate-'+c).value);
+    if(!isNaN(v)&&v>0){ rates[c]=v; }
+  });
+  saveRatesToStorage();
+  updateBadges(); recalcAll();
+}
+
+// ── Event wiring ──────────────────────────────────────────────────────────────
+function initEvents(){
+  document.getElementById('tab-calc').addEventListener('click',()=>switchTab('calc'));
+  document.getElementById('tab-price').addEventListener('click',()=>switchTab('price'));
+  document.getElementById('rate-pill').addEventListener('click',openSheet);
+  document.getElementById('sheet-close').addEventListener('click',closeSheet);
+  document.getElementById('sheet-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeSheet();});
+  PRESETS.forEach(gp=>document.getElementById('gpbtn-'+gp).addEventListener('click',()=>selectGP(gp)));
+  document.getElementById('gp-manual').addEventListener('input',onManualGP);
+  document.getElementById('save-btn-calc').addEventListener('click',()=>saveSnapshot('calc'));
+  document.getElementById('save-btn-price').addEventListener('click',()=>saveSnapshot('price'));
+  document.querySelectorAll('.pin-btn[data-cur]').forEach(btn=>btn.addEventListener('click',()=>setMaster(btn.dataset.cur)));
+  document.querySelectorAll('.reset-calc-btn').forEach(btn=>btn.addEventListener('click',()=>resetAll('calc')));
+  document.querySelectorAll('.reset-price-btn').forEach(btn=>btn.addEventListener('click',()=>resetAll('price')));
+}
+
+// ── Panel helper ──────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.panel').forEach(el=>el.style.display=el.classList.contains('active')?'block':'none');
+});
+const origToggle=Element.prototype;
+// Patch classList.toggle to also set display for panels
+const _toggle=DOMTokenList.prototype.toggle;
+DOMTokenList.prototype.toggle=function(token,force){
+  const result=_toggle.call(this,token,force);
+  if(token==='active'&&this._el&&this._el.classList.contains('panel')){
+    this._el.style.display=result?'block':'none';
+  }
+  return result;
+};
+// simpler approach: just override switchTab and helpers to set display directly
+function setPanel(id,show){ const el=document.getElementById(id); if(el){ el.style.display=show?'block':'none'; el.classList.toggle('active',show); } }
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+buildCols();
+loadSavedRates();
+initEvents();
+
+// Initialize panels
+setPanel('top-calc',true); setPanel('top-price',false);
+setPanel('save-calc',true); setPanel('save-price',false);
+CURRENCIES.forEach(c=>{ setPanel(c+'-calc',true); setPanel(c+'-price',false); });
+
+// GP pills init
+document.getElementById('gpbtn-60').classList.add('active');
+document.getElementById('gp-chosen').textContent='60%';
+updatePins(); updateBadges();
+
+// Register service worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+
+// Load live rates in background
+loadLiveRates();
+
+// Override switchTab to use setPanel
+function switchTab(t){
+  activeTab=t;
+  ['calc','price'].forEach(x=>{
+    document.getElementById('tab-'+x).classList.toggle('active',x===t);
+    setPanel('top-'+x,x===t);
+    setPanel('save-'+x,x===t);
+    CURRENCIES.forEach(c=>setPanel(c+'-x'.replace('x',x),x===t));
+  });
+  if(t==='calc'){resetTop();clearAmounts('calc');}else calcPFromMaster();
+}
+</script>
+</body>
+</html>
