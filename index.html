@@ -6,22 +6,22 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GP Calc">
-<meta name="theme-color" content="#0078D4">
+<meta name="theme-color" content="#6B2D8B">
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <title>GP Calculator</title>
 <style>
 :root {
-  --bg: #f5f4ef;
-  --card: #eceae3;
-  --border: #d4d2cb;
+  --bg: #ffffff;
+  --card: #f4f4f4;
+  --border: #e0e0e0;
   --text: #1a1a18;
   --muted: #888780;
-  --green: #0078D4;
+  --green: #6B2D8B;
   --amber: #854F0B;
   --red: #A32D2D;
-  --blue: #185FA5;
+  --blue: #6B2D8B;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bot: env(safe-area-inset-bottom, 0px);
 }
@@ -33,10 +33,12 @@ html, body { height: 100%; background: var(--bg); font-family: -apple-system, Bl
 
 /* ── Header ── */
 .header {
-  background: var(--green); color: #fff;
+  background: #1A1A1A; color: #fff;
   padding: 14px 16px 12px;
   display: flex; align-items: center; justify-content: space-between;
 }
+.header-left { display: flex; flex-direction: column; }
+.header-brand { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #6B2D8B; text-transform: uppercase; margin-bottom: 2px; }
 .header-title { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
 .rate-pill {
   font-size: 11px; color: rgba(255,255,255,0.85);
@@ -94,7 +96,7 @@ html, body { height: 100%; background: var(--bg); font-family: -apple-system, Bl
 }
 .result-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 .gp-big { font-size: 42px; font-weight: 300; line-height: 1; color: var(--text); }
-.gp-big.good { color: #0078D4; }
+.gp-big.good { color: #6B2D8B; }
 .gp-big.mid  { color: var(--amber); }
 .gp-big.bad  { color: var(--red); }
 .gp-chosen { font-size: 42px; font-weight: 300; line-height: 1; color: var(--green); margin-bottom: 10px; }
@@ -107,7 +109,7 @@ html, body { height: 100%; background: var(--bg); font-family: -apple-system, Bl
   color: var(--muted); font-size: 12px; font-weight: 500;
   font-family: inherit; cursor: pointer; transition: all .1s;
 }
-.gp-pill.active { border-color: var(--green); color: var(--green); background: rgba(0,120,212,0.07); font-weight: 700; }
+.gp-pill.active { border-color: var(--green); color: var(--green); background: rgba(107,45,139,0.07); font-weight: 700; }
 .pill-custom {
   height: 28px; border-radius: 20px; border: 1.5px solid var(--border);
   background: transparent; display: inline-flex; align-items: center;
@@ -180,7 +182,10 @@ html, body { height: 100%; background: var(--bg); font-family: -apple-system, Bl
 
   <!-- Header -->
   <div class="header">
-    <div class="header-title">GP Calculator</div>
+    <div class="header-left">
+      <div class="header-brand">CONTROP</div>
+      <div class="header-title">GP Calculator</div>
+    </div>
     <div class="rate-pill" id="rate-pill">Rates ✎</div>
   </div>
 
